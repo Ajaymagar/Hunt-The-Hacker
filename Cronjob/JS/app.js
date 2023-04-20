@@ -3,14 +3,14 @@ const fs = require('fs');
 const FormData = require('form-data');
 const path = require('path');
 
-const discordWebhookUrl = 'YOUR_URL';
+const discordWebhookUrl = 'https://discord.com/api/webhooks/917370011729924107/YaRszIIOVi_7NtjzqmHnwqmDjmp6LylkBoI-D1ZTXnU9_Vj4jmsqJ7VJHZr2Esa-QrqA';
 //const message = 'Malicious request detected: /etc/passwd in path value!';
 //const data = { content: message };
 
 
 
 const elasticsearch = require('elasticsearch');
-const host = 'http://elasticsearch:9200'; // Elasticsearch host URL
+const host = 'http://localhost:9200'; // Elasticsearch host URL
 const indexPattern = 'logstash-*'; // Elasticsearch index pattern
 const username = 'elastic'; // Elasticsearch username for basic authentication
 const password = 'password'; // Elasticsearch password for basic authentication
@@ -20,47 +20,63 @@ const client = new elasticsearch.Client({
     httpAuth: `${username}:${password}`,
 });
 
-const paths = ['/index.php','/etc/passwd','/.git','/.git/config','/config.php','/admin.php','sleep','sysdate','config'];
+const paths = ['/etc/passwd','/.git','/.git/config','sleep','sysdate','config','app.js'];
+
 
 const query = {
-    bool: {
-      must: [
-        {
-          bool: {
-            should: paths.map(path => ({
-              match_phrase: {
-                log: path,
+  bool: {
+    must: [
+      {
+        range: {
+          '@timestamp': {
+            gte: 'now-15m',
+            lte: 'now',
+          },
+        },
+      },
+      {
+        bool: {
+          should: [
+            {
+              bool: {
+                should: paths.map(path => ({
+                  match_phrase: {
+                    log: path,
+                  },
+                })),
               },
-            })),
-          },
-  
-        },
-        {
-          range: {
-            '@timestamp': {
-              gte: 'now-15m',
-              lte: 'now',
             },
-          },
-        },
-      ],
-    },
-  };
+            {
+              regexp: {
+                log: ".*\\.php.*"
+              }
+            },
+            {
+              regexp: {
+                log: ".*\\.yaml.*"
+              }
+            },
+          ],
+        }
+      }
+    ],
+  },
+};
 
 
 client.search({
     index: indexPattern,
+    scroll: '30s', // how long a consistent view of the index should be maintained
+    size: 1000, // how many hits to return per batch
     body: {
       query,
     },
   }).then(response => {
     console.log(`Found ${response.hits.total.value} logs:`);
-  
-const realdata = response.hits.hits.map(data=>{
-    return data._source.log
-})
-
-console.log(realdata)
+    const realdata = response.hits.hits.map(data=>{
+        return data._source.log
+      })
+    console.log(realdata)
 
 
 async function sendToDiscordWebhook(webhookUrl, data) {

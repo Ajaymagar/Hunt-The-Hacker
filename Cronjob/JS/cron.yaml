@@ -10,7 +10,7 @@ spec:
         spec:
           containers:
           - name: discord-alerts
-            image: yourname/cronapp:latest
+            image: ajaymagar/cronapp:latest
             ports:
               - containerPort: 3000
             env:
