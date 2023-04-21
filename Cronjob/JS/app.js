@@ -3,7 +3,7 @@ const fs = require('fs');
 const FormData = require('form-data');
 const path = require('path');
 
-const discordWebhookUrl = 'https://discord.com/api/webhooks/917370011729924107/YaRszIIOVi_7NtjzqmHnwqmDjmp6LylkBoI-D1ZTXnU9_Vj4jmsqJ7VJHZr2Esa-QrqA';
+const discordWebhookUrl = 'url';
 //const message = 'Malicious request detected: /etc/passwd in path value!';
 //const data = { content: message };
 
